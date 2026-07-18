@@ -57,7 +57,7 @@ fun Application.module() {
 
     routing {
         get("/health") { call.respond(HealthResponse(status = "ok")) }
-        apiRoutes(storage, jwt, System.getenv("INTERCOM_KEY") ?: "oskeys-demo-intercom-key")
+        apiRoutes(storage, jwt, System.getenv("INTERCOM_KEY") ?: "syekso-demo-intercom-key")
     }
 }
 

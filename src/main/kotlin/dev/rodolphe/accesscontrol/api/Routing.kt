@@ -131,6 +131,7 @@ private fun Route.meRoutes(storage: MongoStorage) {
                 doorName = door.name,
                 doorBleLocalName = door.bleLocalName,
                 createdAtEpochMs = now,
+                validFromEpochMs = now,
                 expiresAtEpochMs = expiresAt,
             ),
         )
@@ -149,6 +150,79 @@ private fun Route.meRoutes(storage: MongoStorage) {
             ),
         ).toList()
         call.respond(PinCodesResponse(codes.map { PinCodeDto(it.pin, it.doorName, it.expiresAtEpochMs) }))
+    }
+
+    // POST /me/invitations — a titled, windowed, multi-use code for one door.
+    post("/me/invitations") {
+        val userId = call.userId()
+        val body = call.receive<CreateInvitationRequest>()
+        if (body.title.isBlank() || body.validUntilEpochMs <= body.validFromEpochMs) {
+            call.respond(HttpStatusCode.BadRequest, ErrorResponse("Titre ou fenêtre invalide"))
+            return@post
+        }
+        val user = storage.users.find(Filters.eq("_id", userId)).firstOrNull()
+        if (user == null) {
+            call.respond(HttpStatusCode.NotFound, ErrorResponse("Utilisateur introuvable"))
+            return@post
+        }
+        val buildings = storage.buildings.find(Filters.`in`("_id", user.buildingIds)).toList()
+        val match = buildings.firstNotNullOfOrNull { b -> b.doors.find { it.id == body.doorId }?.let { b to it } }
+        if (match == null) {
+            call.respond(HttpStatusCode.NotFound, ErrorResponse("Porte introuvable"))
+            return@post
+        }
+        val (building, door) = match
+        val code = generateUniquePin(storage)
+        storage.pinCodes.insertOne(
+            PinCodeDoc(
+                pin = code,
+                issuedByUserId = userId,
+                buildingId = building.id,
+                doorId = door.id,
+                doorName = door.name,
+                doorBleLocalName = door.bleLocalName,
+                createdAtEpochMs = System.currentTimeMillis(),
+                validFromEpochMs = body.validFromEpochMs,
+                expiresAtEpochMs = body.validUntilEpochMs,
+                singleUse = false,
+                title = body.title.trim(),
+            ),
+        )
+        call.respond(
+            InvitationDto(
+                code = code,
+                title = body.title.trim(),
+                doorName = door.name,
+                validFromEpochMs = body.validFromEpochMs,
+                validUntilEpochMs = body.validUntilEpochMs,
+            ),
+        )
+    }
+
+    // GET /me/invitations — the caller's invitations whose window hasn't ended yet.
+    get("/me/invitations") {
+        val userId = call.userId()
+        val now = System.currentTimeMillis()
+        val codes = storage.pinCodes.find(
+            Filters.and(
+                Filters.eq("issuedByUserId", userId),
+                Filters.eq("singleUse", false),
+                Filters.gt("expiresAtEpochMs", now),
+            ),
+        ).toList()
+        call.respond(
+            InvitationsResponse(
+                codes.map {
+                    InvitationDto(
+                        code = it.pin,
+                        title = it.title ?: "",
+                        doorName = it.doorName,
+                        validFromEpochMs = it.validFromEpochMs,
+                        validUntilEpochMs = it.expiresAtEpochMs,
+                    )
+                },
+            ),
+        )
     }
 }
 
@@ -190,11 +264,13 @@ private fun Route.intercomRoutes(storage: MongoStorage, intercomKey: String) {
         when {
             doc == null ->
                 call.respond(IntercomValidateResponse(allowed = false, reason = "Code inconnu"))
-            doc.redeemedAtEpochMs != null ->
-                call.respond(IntercomValidateResponse(allowed = false, reason = "Code déjà utilisé"))
-            doc.expiresAtEpochMs <= now ->
+            now < doc.validFromEpochMs ->
+                call.respond(IntercomValidateResponse(allowed = false, reason = "Invitation pas encore active"))
+            now > doc.expiresAtEpochMs ->
                 call.respond(IntercomValidateResponse(allowed = false, reason = "Code expiré"))
-            else -> {
+            doc.singleUse && doc.redeemedAtEpochMs != null ->
+                call.respond(IntercomValidateResponse(allowed = false, reason = "Code déjà utilisé"))
+            doc.singleUse -> {
                 val claimed = storage.pinCodes.updateOne(
                     Filters.and(Filters.eq("_id", pin), Filters.eq("redeemedAtEpochMs", null)),
                     Updates.set("redeemedAtEpochMs", now),
@@ -211,6 +287,14 @@ private fun Route.intercomRoutes(storage: MongoStorage, intercomKey: String) {
                     )
                 }
             }
+            else -> // multi-use invitation: allowed, not consumed
+                call.respond(
+                    IntercomValidateResponse(
+                        allowed = true,
+                        doorName = doc.doorName,
+                        doorBleLocalName = doc.doorBleLocalName,
+                    ),
+                )
         }
     }
 }

@@ -48,6 +48,26 @@ data class PinCodeDto(val pin: String, val doorName: String, val expiresAtEpochM
 data class PinCodesResponse(val codes: List<PinCodeDto>)
 
 @Serializable
+data class CreateInvitationRequest(
+    val title: String,
+    val doorId: String,
+    val validFromEpochMs: Long,
+    val validUntilEpochMs: Long,
+)
+
+@Serializable
+data class InvitationDto(
+    val code: String,
+    val title: String,
+    val doorName: String,
+    val validFromEpochMs: Long,
+    val validUntilEpochMs: Long,
+)
+
+@Serializable
+data class InvitationsResponse(val invitations: List<InvitationDto>)
+
+@Serializable
 data class IntercomValidateRequest(val pin: String)
 
 @Serializable

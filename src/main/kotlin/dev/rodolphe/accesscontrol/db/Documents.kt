@@ -62,5 +62,8 @@ data class PinCodeDoc(
     val doorBleLocalName: String,
     val createdAtEpochMs: Long,
     val expiresAtEpochMs: Long,
+    val validFromEpochMs: Long = 0L,
+    val singleUse: Boolean = true,
+    val title: String? = null,
     val redeemedAtEpochMs: Long? = null,
 )
