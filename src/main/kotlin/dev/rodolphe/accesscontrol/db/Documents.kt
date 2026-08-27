@@ -67,3 +67,16 @@ data class PinCodeDoc(
     val title: String? = null,
     val redeemedAtEpochMs: Long? = null,
 )
+
+/**
+ * A synthetic feed row for the cursor-pagination exercise. [seq] is a human-readable 1..N counter, only
+ * to eyeball duplicates in responses; a real feed wouldn't need it. [createdAtEpochMs] is the sort key,
+ * paired with `_id` as the tie-breaker.
+ */
+@Serializable
+data class FeedItemDoc(
+    @SerialName("_id") val id: String,
+    val seq: Int,
+    val label: String,
+    val createdAtEpochMs: Long,
+)

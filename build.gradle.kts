@@ -27,6 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets:$ktorVersion")
 
     // Persistence: MongoDB via the official Kotlin coroutine driver, with the kotlinx.serialization
     // BSON codec so @Serializable data classes map straight to documents.
@@ -40,6 +41,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }
 
 kotlin {

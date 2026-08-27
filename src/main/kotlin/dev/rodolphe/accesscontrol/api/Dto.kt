@@ -48,6 +48,12 @@ data class PinCodeDto(val pin: String, val doorName: String, val expiresAtEpochM
 data class PinCodesResponse(val codes: List<PinCodeDto>)
 
 @Serializable
+data class DirectoryEntry(val userId: String, val displayName: String)
+
+@Serializable
+data class DirectoryResponse(val residents: List<DirectoryEntry>)
+
+@Serializable
 data class CreateInvitationRequest(
     val title: String,
     val doorId: String,
@@ -77,3 +83,23 @@ data class IntercomValidateResponse(
     val doorBleLocalName: String? = null,
     val reason: String? = null,
 )
+
+/**
+ * What actually happened at the door after /intercom/validate said yes. A single-use PIN is claimed
+ * during validation so two intercoms can't race for it, which means a failed open would otherwise
+ * burn the visitor's only code — this hands it back.
+ */
+@Serializable
+data class IntercomOpenResultRequest(val pin: String, val success: Boolean)
+
+@Serializable
+data class IntercomOpenResultResponse(val released: Boolean)
+
+@Serializable
+data class FeedItemDto(val id: String, val seq: Int, val label: String, val createdAtEpochMs: Long)
+
+@Serializable
+data class OffsetPageResponse(val items: List<FeedItemDto>, val page: Int, val nextPage: Int)
+
+@Serializable
+data class CursorPageResponse(val items: List<FeedItemDto>, val nextCursor: String?)

@@ -4,6 +4,8 @@ import dev.rodolphe.accesscontrol.api.ErrorResponse
 import dev.rodolphe.accesscontrol.api.apiRoutes
 import dev.rodolphe.accesscontrol.db.connectMongo
 import dev.rodolphe.accesscontrol.security.JwtService
+import dev.rodolphe.accesscontrol.signaling.SignalingHub
+import io.ktor.server.websocket.WebSockets
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -19,6 +21,7 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
@@ -28,9 +31,15 @@ fun main() {
 
 fun Application.module() {
     val storage = connectMongo()
-    runBlocking { storage.seedIfEmpty() }
-    val jwt = JwtService()
+    runBlocking {
+        storage.seedIfEmpty()
+        storage.setupFeedItems()
+    }
 
+    val jwt = JwtService()
+    val signalingHub = SignalingHub(scope = this)
+
+    install(WebSockets)
     install(ContentNegotiation) { json() }
 
     install(Authentication) {
@@ -57,7 +66,7 @@ fun Application.module() {
 
     routing {
         get("/health") { call.respond(HealthResponse(status = "ok")) }
-        apiRoutes(storage, jwt, System.getenv("INTERCOM_KEY") ?: "syekso-demo-intercom-key")
+        apiRoutes(storage, jwt, System.getenv("INTERCOM_KEY") ?: "syekso-demo-intercom-key", signalingHub)
     }
 }
 

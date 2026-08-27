@@ -29,6 +29,14 @@ class JwtService(
         .withExpiresAt(Date(System.currentTimeMillis() + TOKEN_TTL_MS))
         .sign(algorithm)
 
+    /** Verify a raw JWT and return its user-id claim, or null if invalid/expired. Used by the /ws
+     *  handshake, which authenticates from the first HELLO frame rather than an auth header. */
+    fun userIdFromToken(token: String): String? = try {
+        verifier.verify(token).getClaim(CLAIM_USER_ID).asString()
+    } catch (e: Exception) {
+        null
+    }
+
     companion object {
         const val CLAIM_USER_ID = "userId"
         private const val TOKEN_TTL_MS = 7L * 24 * 60 * 60 * 1000 // 7 days
