@@ -40,9 +40,8 @@ Une fois le serveur démarré, `scripts/smoke-cutover.ps1` exécute 18 contrôle
 
 ## Choix de langage et de bibliothèques — non négociables
 
-- **Java, pas Kotlin.** Ce dépôt est une vitrine pour des offres backend Java. En cas d'arbitrage entre
-  une bibliothèque Java et une Kotlin, prendre la Java.
-- **Jackson uniquement** pour la sérialisation. kotlinx.serialization est abandonné côté serveur.
+- **Java, pas Kotlin.** En cas d'arbitrage entre une bibliothèque Java et Kotlin, prendre Java.
+- **Jackson uniquement** pour la sérialisation.
 
 ## Pièges Spring Boot 4 — à vérifier en premier quand quelque chose semble ignoré
 
