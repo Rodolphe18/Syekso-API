@@ -1,4 +1,4 @@
-# AccessControllerServer
+# Syekso-API
 
 [![CI](https://github.com/Rodolphe18/AccessControllerServer/actions/workflows/ci.yml/badge.svg)](https://github.com/Rodolphe18/AccessControllerServer/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
