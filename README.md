@@ -1,5 +1,6 @@
 # AccessControllerServer
 
+[![CI](https://github.com/Rodolphe18/AccessControllerServer/actions/workflows/ci.yml/badge.svg)](https://github.com/Rodolphe18/AccessControllerServer/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0-6DB33F?logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=white)
